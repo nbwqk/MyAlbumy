@@ -1,0 +1,2 @@
+FLASK_APP=MyAlbumy
+FLASK_ENV=development
