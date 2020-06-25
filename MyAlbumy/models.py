@@ -125,6 +125,55 @@ class User(db.Model,UserMixin):
 
     def collect(self,photo):
         if not self.is_collecting(photo):
+            collect=Collect(collector=self,collected=photo)
+            db.session.add(collect)
+            db.session.commit()
 
+    def uncollect(self,photo):
+        collect=Collect.query.with_parent(self).filter_by(collected_id=photo.id).first()
+        if collect:
+            db.session.delete(collect)
+            db.session.commit()
 
+    def is_collecting(self,photo):
+        return Collect.query.with_parent(self).filter_by(collected_id=photo.id).first() is not None
+
+    def lock(self):
+        self.locked=True
+        self.role=Role.query.filter_by(name='Locked').first()
+        db.session.commit()
+
+    def unlock(self):
+        self.locked=False
+        self.role=Role.query.filter_by(name='User').first()
+        db.session.commit()
+
+    def unblock(self):
+        self.active=True
+        db.session.commit()
+
+    def generate_avatar(self):
+        avatar=Identicon()
+        filenames=avatar.generate(text=self.username)
+        self.avatar_s=filenames[0]
+        self.avatar_m=filenames[1]
+        self.avatar_l=filenames[2]
+        db.session.commit()
+
+    @property
+    def is_admin(self):
+        return self.role.name=='Administrator'
+
+    @property
+    def is_active(self):
+        return self.active
+
+    def can(self,permission_name):
+        permission=Permission.query.filter_by(name=permission_name).first()
+        return permission is not None and self.role is not None and permission in self.role.permissions
+
+tagging=db.Table('tagging',
+                 db.Column('photo_id',db.Integer,db.ForeignKey('photo.id')),
+                 db.Column('tag_id',db.Integer,db.ForeignKey('tag.id'))
+                 )
 
