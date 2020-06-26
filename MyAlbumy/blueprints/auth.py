@@ -1,12 +1,31 @@
 from flask import Blueprint,redirect,url_for,flash,render_template
 from MyAlbumy.settings import Operations
-from MyAlbumy.emails import send_confirm_email
-from MyAlbumy.forms.auth import RegisterForm
-from flask_login import current_user,login_required
+from MyAlbumy.emails import send_confirm_email,send_reset_password_email
+from MyAlbumy.forms.auth import RegisterForm,LoginForm,ForgetPasswordForm
+from flask_login import current_user,login_required,login_user
 from MyAlbumy.extensions import db
+from MyAlbumy.models import User
 from MyAlbumy.utils import generate_token,validate_token,redirect_back
 
 auth_bp=Blueprint('auth',__name__)
+
+@auth_bp.route('/login',methods=['GET','POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form=LoginForm()
+    if form.validate_on_submit():
+        user=User.query.filter_by(email=form.email.data.lower()).first()
+        if user is not None and user.validate_password(form.password.data):
+            if login_user(user,form.remember_me.data):
+                flash('Login success.','info')
+                return redirect_back()
+            else:
+                flash('Your account is blocked.','warning')
+                return redirect(url_for('main.index'))
+        flash('Invalid email or password.','warning')
+    return render_template('auth/login.html',form=form)
 
 @auth_bp.route('/register',methods=['GET','POST'])
 def register():
@@ -51,3 +70,21 @@ def resend_confirm_email():
     send_confirm_email(user=current_user,token=token)
     flash('New email sent,check your inbox.','info')
     return redirect(url_for('main.index'))
+
+@auth_bp.route('/forget-password',methods=['GET','POST'])
+def forget_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form=ForgetPasswordForm()
+    if form.validate_on_submit():
+        user=User.query.filter_by(email=form.email.data.lower()).first()
+        if user:
+            token=generate_token(user=user,operation=Operations.RESET_PASSWORD)
+            send_reset_password_email(user=user,token=token)
+            flash('Password reset email sent,check your inbox.','info')
+            return redirect(url_for('.login'))
+        flash('Invalid email.','warning')
+        return redirect(url_for('.forget_password'))
+    return render_template('auth/reset_password.html',form=form)
+
