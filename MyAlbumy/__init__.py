@@ -1,4 +1,4 @@
-import os
+import os,click
 from flask import Flask,render_template
 from flask_login import current_user
 from MyAlbumy.extensions import bootstrap,moment,mail,db,login_manage,dropzone,whooshee,avatars,csrf
@@ -8,6 +8,7 @@ from MyAlbumy.blueprints.ajax import ajax_bp
 from MyAlbumy.blueprints.auth import auth_bp
 from MyAlbumy.blueprints.main import main_bp
 from MyAlbumy.blueprints.user import user_bp
+from MyAlbumy.models import Role
 
 def create_app(config_name=None):
     if config_name is None:
@@ -79,3 +80,39 @@ def register_errorhandlers(app):
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         return render_template('errors/400.html',description=e.descripition),500
+
+def register_commands(app):
+    @app.cli.command()
+    @click.option('--drop',is_flag=True,help='Create after drop.')
+    def initdb(drop):
+        """Initialize the database."""
+        if drop:
+            click.confirm('This operation will delete the database,do you want to contiune?',abort=True)
+            db.drop_all()
+            click.echo('Drop tables.')
+        db.create_all()
+        click.echo('Initialized database.')
+
+    @app.cli.command()
+    def init():
+        """Initialize MyAlbumy."""
+        click.echo('Initialize the database...')
+        db.create_all()
+
+        click.echo('Initialize the roles and permissions...')
+        Role.init_role()
+
+        click.echo('Done.')
+
+    @app.cli.command()
+    @click.option('--uer',default=10,help='Quantity of users, default is 10.')
+    @click.option('--follow', default=30, help='Quantity of follows, default is 30.')
+    @click.option('--photo', default=30, help='Quantity of photos, default is 30.')
+    @click.option('--tag', default=20, help='Quantity of tags, default is 20.')
+    @click.option('--collect', default=50, help='Quantity of collects, default is 50.')
+    @click.option('--comment', default=100, help='Quantity of comments, default is 100.')
+    def forge(user,follow,photo,tag,collect,comment):
+        """Generate fake data."""
+
+        pass
+

@@ -22,9 +22,9 @@ class Role(db.Model):
     @staticmethod
     def init_role():
         roles_permissions_map={
-            'Locked':['FOLLOW','COLLECT'],
+            'Locked':['FOLLOW','COLLECT'],           # FOLLOW:关注用户  COLLECT:收藏图片
             'User':['FOLLOW','COLLECT','COMMENT','UPLOAD'],
-            'Moderator':['FOLLOW','COLLECT','COMMENT','UPLOAD','MODERATE'],
+            'Moderator':['FOLLOW','COLLECT','COMMENT','UPLOAD','MODERATE'], # MODERATE：协管员
             'Administrator':['FOLLOW','COLLECT','COMMENT','UPLOAD','MODERATE','ADMINISTER']
         }
 

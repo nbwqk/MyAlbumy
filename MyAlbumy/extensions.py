@@ -37,3 +37,5 @@ class Guest(AnonymousUserMixin):
     @property
     def is_admin(self):
         return False
+
+login_manage.anonymous_user=Guest
