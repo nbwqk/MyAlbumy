@@ -17,7 +17,7 @@ def confirm_required(func):
         return func(*args,**kwargs)
     return decorated_function
 
-def permission_required(permission_name):
+def permission_required(permission_name):  # 定义了一个函数，函数体里面定义了一个装饰器。
     def decorator(func):
         @wraps(func)
         def decorated_function(*args,**kwargs):

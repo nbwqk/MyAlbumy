@@ -1,6 +1,7 @@
 from MyAlbumy.extensions import db
 from flask_login import UserMixin
 from flask import current_app
+from datetime import datetime
 
 # relationship table
 roles_permissions=db.Table('roles_permissions',
@@ -177,3 +178,26 @@ tagging=db.Table('tagging',
                  db.Column('tag_id',db.Integer,db.ForeignKey('tag.id'))
                  )
 
+@whooshee.register_model('description')
+class Photo(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    description=db.Column(db.String(500))
+    filename=db.Column(db.String(64))
+    filename_s=db.Column(db.String(64))
+    filename_m=db.Column(db.String(64))
+    timestamp=db.Column(db.DateTime,default=datetime.utcnow,index=True)
+    can_comment=db.Column(db.Boolean,default=True)
+    flag=db.Column(db.Integer,default=0)
+    author_id=db.Column(db.Integer,db.ForeignKey('uer.id'))
+
+    author=db.relationship('User',back_populates='photos')
+    comments=db.relationship('Comment',back_populates='photos',cascade='all')
+    collectors=db.relationship('Collect',back_populates='photos',cascade='all')
+    tags=db.relationship('Tag',secondary=tagging,back_populates='photos')
+
+@whoosheee.register_model('name')
+class Tag(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    name=db.Column(db.String(64),index=True,unique=True)
+
+    photos=db.relationship('Photo',secondary=tagging,back_populates='tags')
