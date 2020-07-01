@@ -2,6 +2,7 @@ from MyAlbumy.extensions import db
 from flask_login import UserMixin
 from flask import current_app
 from datetime import datetime
+from flask_avatars import Identicon
 
 # relationship table
 roles_permissions=db.Table('roles_permissions',
@@ -54,9 +55,9 @@ class User(db.Model,UserMixin):
     bio=db.Column(db.String(120))
     location = db.Column(db.String(50))
     member_since=db.Column(db.DateTime,default=datetme.utcnow)
-    avatar_s=db.Column(db.String(64))
-    avatar_m = db.Column(db.String(64))
-    avatar_l = db.Column(db.String(64))
+    avatar_s=db.Column(db.String(64))   # 小头像名称
+    avatar_m = db.Column(db.String(64))  # 中头像名称
+    avatar_l = db.Column(db.String(64))  # 大头像名称
     avatar_raw = db.Column(db.String(64))
 
     confirmed=db.Column(db.Boolean,default=False)

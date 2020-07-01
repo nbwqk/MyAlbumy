@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint,request,current_app,render_template
+from flask import Blueprint,request,current_app,render_template,send_from_directory
 from flask_login import login_required,current_user
 from MyAlbumy.decorators import confirm_required,permission_required
 from MyAlbumy.utils import rename_image,resize_image,redirect_back,flash_errors
@@ -7,6 +7,14 @@ from MyAlbumy.models import Photo
 from MyAlbumy.extensions import db
 
 main_bp=Blueprint('main',__name__)
+
+@main_bp.route('/uploads/<path:filename>')  #  获取图片的是视图
+def get_image(filename):
+    return send_from_directory(current_app.config['MYALBUMY_UPLOAD_PATH'],filename)
+
+@main_bp.route('/avatars/<path:filename>')  #  从文件夹获取头像文件的视图
+def get_avatar(filename):
+    return send_from_directory(current_app.config['AVATARS_SAVE_PATH'],filename)
 
 @main_bp.route('/upload',methods=['GET','POST'])
 @login_required # 验证登录状态
