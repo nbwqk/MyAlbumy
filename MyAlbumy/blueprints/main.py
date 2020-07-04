@@ -3,7 +3,7 @@ from flask import Blueprint,request,current_app,render_template,send_from_direct
 from flask_login import login_required,current_user
 from MyAlbumy.decorators import confirm_required,permission_required
 from MyAlbumy.utils import rename_image,resize_image,redirect_back,flash_errors
-from MyAlbumy.models import Photo
+from MyAlbumy.models import Photo,Comment
 from MyAlbumy.extensions import db
 
 main_bp=Blueprint('main',__name__)
@@ -36,3 +36,20 @@ def upload():
         db.session.add(photo)
         db.session.commit()
     return render_template('main/upload.html')
+
+@main_bp.route('/photo/<int:photo_id>')
+def show_photo(photo_id):
+    photo=Photo.query.get_or_404(photo_id)
+    page=request.args.get('page',1,type=int)
+    per_page=current_app.config['MYALBUMY_COMMENT_PER_PAGE']
+    pagination=Comment.query.with_parent(photo).order_by(Comment.timestamp.asc()).paginate(page,per_page)
+    comments=pagination.items
+
+    comment_form=CommentForm()
+    description_form=DescriptionForm()
+    tag_form=TagForm()
+
+    description_form.description.data=photo.description
+    return render_template('main/photo.html',photo=photo,comment_form=comment_form,
+                           description_form=description_form,tag_form=tag_form,
+                           pagination=pagination,comments=comments)
